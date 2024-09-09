@@ -1,19 +1,16 @@
 package myFunctions
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func Mybin(str string) string {
-	ret1 := 0
-	num, _ := strconv.Atoi(str)
 	ret := 0
-	for num > 0 {
-		ret = ret*10 + num%2
-		num /= 2
+	for i := 0; i < len(str); i++ {
+		if str[i] != '0' && str[i] != '1' {
+			return ""
+		}
+		ret += (int(str[i]) -'0') * power(2, len(str)-i-1)
 	}
-	for ret > 0 {
-		ret1 = ret1*10 + ret%10
-		ret /= 10
-	}
-	ret_str := strconv.Itoa(ret1)
-	return ret_str
+	return strconv.Itoa(ret)
 }
