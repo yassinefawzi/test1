@@ -2,22 +2,13 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	//"go-reloaded/myFunctions"
 	"os"
 	//"strings"
 )
-
-func check_for_brack(s string, i int) bool {
-	holder := []rune(s)
-	for ; i < len(holder); i++ {
-		if holder[i] == '(' {
-			return false
-		} else if holder[i] == ')' {
-			return true
-		}
-	}
-	return false
-}
 
 func skip_extra(s string, i int) int {
 	for i < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
@@ -32,30 +23,19 @@ func SplitWhiteSpaces(s string) []string {
 	var holder []rune
 	runes := []rune(s)
 	for i := 0; i < len(runes); i++ {
-		if runes[i] == '(' && check_for_brack(s, i+1) {
-			for ; i < len(runes) && runes[i] != ')'; i++ {
-				holder = append(holder, runes[i])
-			}
-			holder = append(holder, ')')
-			if i+1 < len(runes) {
-				if len(holder) >= 1 {
-					ret = append(ret, string(holder))
-					holder = []rune{}
-				}
-			}
-		} else if runes[i] == ' ' || runes[i] == '\t' || runes[i] == '\n' {
+		if runes[i] == ' ' || runes[i] == '\t' || runes[i] == '\n' {
 			i = skip_extra(string(runes), i)
 			if len(holder) >= 1 {
 				ret = append(ret, string(holder))
 				holder = []rune{}
 			}
 		} else {
-			fmt.Printf("%c\n", runes[i])
 			holder = append(holder, runes[i])
-
 		}
 	}
-	ret = append(ret, string(holder))
+	if len(holder) > 0 {
+		ret = append(ret, string(holder))
+	}
 	return ret
 }
 
@@ -71,22 +51,14 @@ func copy_first(str string) string {
 	ret := []rune{}
 	jhold := 0
 	for i := 0; i < len(str); i++ {
-		if i+1 < len(s) && (str[i+1] == '(') {
-			if s[i] != ' ' && s[i] != '\t' && s[i] != '\n' && s[i] != '\r' {
-				ret = append(ret, s[i])
-				ret = append(ret, ' ')
-			} else {
-				ret = append(ret, s[i])
-			}
-		} else if i+1 < len(s) && s[i] == ')' {
-			if s[i+1] != ' ' && s[i+1] != '\t' && s[i+1] != '\n' && s[i+1] != '\r' {
-				ret = append(ret, s[i])
-				ret = append(ret, ' ')
-			} else {
+		if i+1 < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
+			jhold = i
+			i = skip_space(s, i)
+			if s[i] == '.' || s[i] == ',' || s[i] == '!' || s[i] == '?' || s[i] == ':' || s[i] == ';' {
 				ret = append(ret, s[i])
 			}
-		} else if i+1 < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
-			if s[i+1] != '.' && s[i+1] != ',' && s[i+1] != '!' && s[i+1] != '?' && s[i+1] != ':' && s[i+1] != ';' {
+			if i < len(s) && (s[i] != '.' && s[i] != ',' && s[i] != '!' && s[i] != '?' && s[i] != ':' && s[i] != ';') {
+				ret = append(ret, ' ')
 				ret = append(ret, s[i])
 			}
 		} else if s[i] == 'a' || s[i] == 'A' {
@@ -94,7 +66,7 @@ func copy_first(str string) string {
 				if i+1 < len(s) && (s[i+1] == ' ' || s[i+1] == '\t' || s[i+1] == '\n' || s[i+1] == '\r') {
 					jhold = i
 					i = skip_space(s, i+1)
-					if s[i] == 'a' || s[i] == 'e' || s[i] == 'i' || s[i] == 'u' || s[i] == 'o' || s[i] == 'h' {
+					if i < len(s) && (s[i] == 'a' || s[i] == 'e' || s[i] == 'i' || s[i] == 'u' || s[i] == 'o' || s[i] == 'h') {
 						ret = append(ret, s[jhold])
 						ret = append(ret, 'n')
 					} else {
@@ -130,28 +102,57 @@ func copy_first(str string) string {
 	return string(ret)
 }
 
+func check_brack(s string) bool {
+	return s[len(s)-1] == ')'
+}
+
+func check_flag(s string) int {
+	if s == "(up" || s == "(up)" {
+		return 1
+	} else if s == "(low" || s == "(low)" {
+		return 2
+	} else if s == "(cap" || s == "(cap)" {
+		return 3
+	} else if s == "(hex" || s == "(hex)" {
+		return 4
+	} else if s == "(bin" || s == "(bin)" {
+		return 5
+	} else {
+		return -1
+	}
+}
+
+func run_it(s []string) []string {
+	var ret []string
+	holder := []rune{}
+	var run_holder []string
+	flag := 0
+	for i := 0; i < len(s); i++ {
+		if s[i][0] == '(' {
+			if check_brack(s[i]) {
+				run_holder := strings.Split(s[i], ",")
+				flag = check_flag(run_holder[0])
+				if flag < 0 {
+					ret = append(ret, s[i])
+				}
+
+			}
+		}
+	}
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("Error: 3 Arguments needed\n")
 		return
 	}
 	var content string
-	//var fcontent string
 	Fcontent, err := os.ReadFile(os.Args[1])
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	}
 	content = copy_first(string(Fcontent))
 	splited_content := SplitWhiteSpaces(content)
-	fmt.Printf("%s\n", splited_content[len(splited_content)-1])
-	/*fcontent = parse(Fcontent)
-	fcontent = parse_quotes(fcontent)
-	content = SplitWhiteSpaces(fcontent)
-	content = loop_func(content)
-	if content == nil {
-		fmt.Printf("Error.\n")
-		return
-	}
-	ret := final_loop(content)
-	fmt.Printf("%s\n", string(ret))*/
+	
+	fmt.Printf("%s\n", splited_content)
 }
