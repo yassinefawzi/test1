@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	//"go-reloaded/myFunctions"
-	//"strings"
+	"strings"
+
+	"go-reloaded/myFunctions"
 )
 
 func skip_extra(s string, i int) int {
@@ -16,12 +17,30 @@ func skip_extra(s string, i int) int {
 	return i
 }
 
+func check_if_closed(s string, i int) bool {
+	i++
+	for ; i < len(s); i++ {
+		if s[i] == '(' {
+			return false
+		} else if s[i] == ')' {
+			return true
+		}
+	}
+	return false
+}
+
 func SplitWhiteSpaces(s string) []string {
 	var ret []string
 	var holder []rune
 	runes := []rune(s)
 	for i := 0; i < len(runes); i++ {
-		if runes[i] == ' ' || runes[i] == '\t' || runes[i] == '\n' {
+		if runes[i] == '(' && check_if_closed(s, i) {
+			for ; i < len(runes) && runes[i] != ')'; i++ {
+				holder = append(holder, runes[i])
+			}
+			ret = append(ret, (string(holder) + ")"))
+			holder = []rune{}
+		} else if runes[i] == ' ' || runes[i] == '\t' || runes[i] == '\n' {
 			i = skip_extra(string(runes), i)
 			if len(holder) >= 1 {
 				ret = append(ret, string(holder))
@@ -111,9 +130,9 @@ func check_flag(s string) int {
 		return 2
 	} else if s == "(cap" || s == "(cap)" {
 		return 3
-	} else if s == "(hex" || s == "(hex)" {
+	} else if s == "(hex)" {
 		return 4
-	} else if s == "(bin" || s == "(bin)" {
+	} else if s == "(bin)" {
 		return 5
 	} else {
 		return -1
@@ -121,7 +140,7 @@ func check_flag(s string) int {
 }
 
 func ret_control(s string) int {
-	holder := s[:len(s)-1]
+	holder := s[1 : len(s)-1]
 	ret, Err := strconv.Atoi(holder)
 	if Err != nil {
 		return -1
@@ -129,21 +148,20 @@ func ret_control(s string) int {
 	return ret
 }
 
-/*func ret_index(s []string, i int, control int) int {
-	if i - control < 0 {
-		return -1
-	}
-	for ; control > 0; {
-		if len(s) {
-			i--
+func control_final_index(s []string, i int, control int) int {
+	j := 0
+	for ; j < control; i-- {
+		if s[i][0] == '(' {
+			j++
 		}
+		j++
 	}
-}*/
+	return j
+}
 
 /*func run_it(s []string) []string {
 	var ret []string
-	holder := []rune{}
-	var run_holder []string
+	// holder := []rune{}
 	control := 0
 	flag := 0
 	j := 0
@@ -155,22 +173,37 @@ func ret_control(s string) int {
 				if len(run_holder) > 1 {
 					control = ret_control(run_holder[1])
 				} else {
-					control = 0
+					control = 1
 				}
 				if control > 0 {
-					j = ret_index(s, i, control)
-					if flag < 0 {
-						ret = append(ret, s[i])
-					} else if flag == 1 {
-						ret = append(ret, myFunctions.Myup(s[i]))
-					} else if flag == 2 {
-						ret = append(ret, myFunctions.Mylow(s[i]))
-					} else if flag == 3 {
-						ret = append(ret, myFunctions.Mycap(s[i]))
-					} else if flag == 4 {
-						ret = append(ret, myFunctions.Myhex(s[i]))
-					} else if flag == 5 {
-						ret = append(ret, myFunctions.Mybin(s[i]))
+					control = control_final_index(s, i-1, control)
+					j = i - control
+					if j >= 0 {
+						if flag < 0 {
+							ret = append(ret, s[i])
+						} else if flag == 1 {
+							for ; j < i; j++ {
+								ret = append(ret, myFunctions.Myup(s[j]))
+							}
+						} else if flag == 2 {
+							for ; j < i; j++ {
+								if s[j][0] != '(' {
+									fmt.Println("OK")
+									ret = append(ret, myFunctions.Mylow(s[j]))
+								}
+							}
+						} else if flag == 3 {
+							for ; j < i; j++ {
+								ret = append(ret, myFunctions.Mycap(s[j]))
+							}
+						} else if flag == 4 {
+							ret = append(ret, myFunctions.Myhex(s[j]))
+						} else if flag == 5 {
+							ret = append(ret, myFunctions.Mybin(s[j]))
+						}
+					} else {
+						fmt.Println("Error.")
+						os.Exit(0)
 					}
 				} else {
 					ret = append(ret, s[i])
@@ -178,6 +211,7 @@ func ret_control(s string) int {
 			}
 		}
 	}
+	return ret
 }*/
 
 func fix_punc(s []string) []string {
@@ -200,12 +234,16 @@ func fix_punc(s []string) []string {
 					ret = append(ret, s[i])
 				}
 			}
-				control++
+			control++
 		} else {
 			ret = append(ret, s[i])
 		}
 	}
 	return ret
+}
+
+func run_it(s []string) []string {
+	var ret 
 }
 
 func main() {
@@ -221,5 +259,6 @@ func main() {
 	content = copy_first(string(Fcontent))
 	splited_content := SplitWhiteSpaces(content)
 	splited_content = fix_punc(splited_content)
-	fmt.Printf("%s\n", splited_content)
+	splited_content = run_it(splited_content)
+	fmt.Printf("%v\n", splited_content)
 }
