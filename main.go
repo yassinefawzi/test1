@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
-
-	//"go-reloaded/myFunctions"
 	"os"
+	"strconv"
+	//"go-reloaded/myFunctions"
 	//"strings"
 )
 
@@ -122,23 +120,92 @@ func check_flag(s string) int {
 	}
 }
 
-func run_it(s []string) []string {
+func ret_control(s string) int {
+	holder := s[:len(s)-1]
+	ret, Err := strconv.Atoi(holder)
+	if Err != nil {
+		return -1
+	}
+	return ret
+}
+
+/*func ret_index(s []string, i int, control int) int {
+	if i - control < 0 {
+		return -1
+	}
+	for ; control > 0; {
+		if len(s) {
+			i--
+		}
+	}
+}*/
+
+/*func run_it(s []string) []string {
 	var ret []string
 	holder := []rune{}
 	var run_holder []string
+	control := 0
 	flag := 0
+	j := 0
 	for i := 0; i < len(s); i++ {
 		if s[i][0] == '(' {
 			if check_brack(s[i]) {
 				run_holder := strings.Split(s[i], ",")
 				flag = check_flag(run_holder[0])
-				if flag < 0 {
+				if len(run_holder) > 1 {
+					control = ret_control(run_holder[1])
+				} else {
+					control = 0
+				}
+				if control > 0 {
+					j = ret_index(s, i, control)
+					if flag < 0 {
+						ret = append(ret, s[i])
+					} else if flag == 1 {
+						ret = append(ret, myFunctions.Myup(s[i]))
+					} else if flag == 2 {
+						ret = append(ret, myFunctions.Mylow(s[i]))
+					} else if flag == 3 {
+						ret = append(ret, myFunctions.Mycap(s[i]))
+					} else if flag == 4 {
+						ret = append(ret, myFunctions.Myhex(s[i]))
+					} else if flag == 5 {
+						ret = append(ret, myFunctions.Mybin(s[i]))
+					}
+				} else {
 					ret = append(ret, s[i])
 				}
-
 			}
 		}
 	}
+}*/
+
+func fix_punc(s []string) []string {
+	var ret []string
+	control := 0
+	for i := 0; i < len(s); i++ {
+		if i+1 < len(s) && s[i][0] == '\'' && s[i+1][0] == '\'' {
+			ret = append(ret, s[i])
+		} else if len(s[i]) == 1 && s[i][0] == '\'' {
+			if control%2 == 0 {
+				if i+1 < len(s) {
+					s[i+1] = "'" + s[i+1]
+				} else {
+					ret = append(ret, s[i])
+				}
+			} else if control%2 != 0 {
+				if i-1 > 0 {
+					ret[len(ret)-1] = ret[len(ret)-1] + "'"
+				} else {
+					ret = append(ret, s[i])
+				}
+			}
+				control++
+		} else {
+			ret = append(ret, s[i])
+		}
+	}
+	return ret
 }
 
 func main() {
@@ -153,6 +220,6 @@ func main() {
 	}
 	content = copy_first(string(Fcontent))
 	splited_content := SplitWhiteSpaces(content)
-	
+	splited_content = fix_punc(splited_content)
 	fmt.Printf("%s\n", splited_content)
 }
