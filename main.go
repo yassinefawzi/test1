@@ -200,54 +200,35 @@ func ret_index(s string) int {
 	}
 }
 
-func check_index(s []string, i int, index int) int {
-	fmt.Println(s)
-	if i == 0 || index > i {
-		return -1
-	}
-	j := i - index
-	for ; j < index; j++ {
-		if len(s[i]) == 1 && s[i][0] == '\'' {
-			index++
-		}
-	}
-	return index-1
-}
-
 func run_it(s []string) []string {
 	var ret []string
 	flag := 0
 	index := 0
+	control := 0
 	for i := 0; i < len(s); i++ {
 		if s[i][0] == '(' && check_brack(s[i]) {
 			index = ret_index(s[i])
-			index = check_index(ret, i, index)
-			fmt.Println(index)
+			control = len(ret) - index
 			if index == -1 {
 			}
 			flag = check_flag(strings.Split(s[i], ","))
 			if flag == 1 {
-				for ; index < i; index++ {
-					if ret[index][0] != '\'' {
-						ret[index] = myFunctions.Myup(ret[index])
-					}
+				for ; control < len(ret); control++ {
+					ret[control] = myFunctions.Myup(ret[control])
 				}
 			} else if flag == 2 {
-				for ; index < i; index++ {
-					if ret[index][0] != '\'' {
-						ret[index] = myFunctions.Mylow(ret[index])
-					}
+				fmt.Printf("control == %d, index == %d len == %d\n", control, index, len(ret))
+				for ; control < len(ret); control++ {
+					ret[control] = myFunctions.Mylow(ret[control])
 				}
 			} else if flag == 3 {
-				for ; index < i; index++ {
-					if ret[index][0] != '\'' {
-						ret[index] = myFunctions.Mycap(ret[index])
-					}
+				for ; control < len(ret); control++ {
+					ret[control] = myFunctions.Mycap(ret[control])
 				}
 			} else if flag == 4 {
-				ret[index] = myFunctions.Myhex(ret[index])
+				ret[index] = myFunctions.Myhex(ret[len(ret)-1])
 			} else if flag == 5 {
-				ret[index] = myFunctions.Mybin(ret[index])
+				ret[index] = myFunctions.Mybin(ret[len(ret)-1])
 			} else {
 				ret = append(ret, s[i])
 			}
@@ -270,7 +251,7 @@ func main() {
 	}
 	content = copy_first(string(Fcontent))
 	splited_content := SplitWhiteSpaces(content)
-	// splited_content = fix_punc(splited_content)
 	splited_content = run_it(splited_content)
+	splited_content = fix_punc(splited_content)
 	fmt.Printf("%v\n", splited_content)
 }
