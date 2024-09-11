@@ -67,18 +67,8 @@ func copy_first(str string) string {
 	s := []rune(str)
 	ret := []rune{}
 	jhold := 0
-	for i := 0; i < len(str); i++ {
-		/*if i+1 < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
-			jhold = i
-			i = skip_space(s, i)
-			if s[i] == '.' || s[i] == ',' || s[i] == '!' || s[i] == '?' || s[i] == ':' || s[i] == ';' {
-				ret = append(ret, s[i])
-			}
-			if i < len(s) && (s[i] != '.' && s[i] != ',' && s[i] != '!' && s[i] != '?' && s[i] != ':' && s[i] != ';') {
-				ret = append(ret, ' ')
-				ret = append(ret, s[i])
-			}*/
-		/*} else*/ if s[i] == 'a' || s[i] == 'A' {
+	for i := 0; i < len(s); i++ {
+		if s[i] == 'a' || s[i] == 'A' {
 			if i == 0 {
 				if i+1 < len(s) && (s[i+1] == ' ' || s[i+1] == '\t' || s[i+1] == '\n' || s[i+1] == '\r') {
 					jhold = i
@@ -196,7 +186,6 @@ func run_it(s []string) []string {
 					ret[control] = myFunctions.Myup(ret[control])
 				}
 			} else if flag == 2 {
-				fmt.Printf("control == %d, index == %d len == %d\n", control, index, len(ret))
 				for ; control < len(ret); control++ {
 					ret[control] = myFunctions.Mylow(ret[control])
 				}
@@ -205,9 +194,9 @@ func run_it(s []string) []string {
 					ret[control] = myFunctions.Mycap(ret[control])
 				}
 			} else if flag == 4 {
-				ret[index] = myFunctions.Myhex(ret[len(ret)-1])
+				ret[control] = myFunctions.Myhex(ret[len(ret)-1])
 			} else if flag == 5 {
-				ret[index] = myFunctions.Mybin(ret[len(ret)-1])
+				ret[control] = myFunctions.Mybin(ret[len(ret)-1])
 			} else {
 				ret = append(ret, s[i])
 			}
@@ -217,6 +206,7 @@ func run_it(s []string) []string {
 	}
 	return ret
 }
+
 func fix_mid_quote(s []string) []string {
 	var ret []string
 	for i := 0; i < len(s); i++ {
@@ -240,13 +230,13 @@ func fix_dot(s []string) []string {
 	for i := 0; i < len(s); i++ {
 		if s[i][0] == '.' || s[i][0] == ',' || s[i][0] == '!' || s[i][0] == '?' || s[i][0] == ':' || s[i][0] == ';' {
 			ret[len(ret)-1] = ret[len(ret)-1] + s[i]
+			//fix space next to dot and unicode
 		} else {
 			ret = append(ret, s[i])
 		}
 	}
 	return ret
 }
-
 
 func main() {
 	if len(os.Args) != 2 {
