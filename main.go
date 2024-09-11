@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go-reloaded/myFunctions"
+	//"go-reloaded/myFunctions"
 )
 
 func skip_extra(s string, i int) int {
@@ -242,9 +242,52 @@ func fix_punc(s []string) []string {
 	return ret
 }
 
-func run_it(s []string) []string {
-	var ret 
+func ret_index(s string) int {
+	var holder []string
+	holder = strings.Split(s, ",")
+	if len(holder) == 1 {
+		return 1
+	} else {
+		ret, err := strconv.Atoi(s[1:len(s)-1])
+		if err != nil {
+			return -1
+		}
+		return ret
+	}
 }
+
+func check_index(s []string, i int, index int) int {
+	if i == 0 || index > i {
+		return -1
+	}
+	j := i - index
+	for ; j < index ; {
+		if len(s[i]) == 1 && s[i][0] == '\'' {
+			index++
+		}
+	}
+	return index
+}
+
+func run_it(s []string) []string {
+	var ret []string
+	flag := 0
+	index := 0
+	for i := 0; i < len(s); i++ {
+		if s[i][0] == '(' && check_brack(s[i]) {
+			index = ret_index(s[i])
+			index = check_index(s, i-1, index)
+			if index == -1 {
+				
+			}
+		}
+		flag = check_flag(s[i])
+		for j := 0; j < len(s); j++ {
+			
+		}
+	}
+}
+
 
 func main() {
 	if len(os.Args) != 2 {
@@ -258,7 +301,7 @@ func main() {
 	}
 	content = copy_first(string(Fcontent))
 	splited_content := SplitWhiteSpaces(content)
-	splited_content = fix_punc(splited_content)
+	//splited_content = fix_punc(splited_content)
 	splited_content = run_it(splited_content)
 	fmt.Printf("%v\n", splited_content)
 }
