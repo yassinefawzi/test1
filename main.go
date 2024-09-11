@@ -68,7 +68,7 @@ func copy_first(str string) string {
 	ret := []rune{}
 	jhold := 0
 	for i := 0; i < len(str); i++ {
-		if i+1 < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
+		/*if i+1 < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
 			jhold = i
 			i = skip_space(s, i)
 			if s[i] == '.' || s[i] == ',' || s[i] == '!' || s[i] == '?' || s[i] == ':' || s[i] == ';' {
@@ -77,8 +77,8 @@ func copy_first(str string) string {
 			if i < len(s) && (s[i] != '.' && s[i] != ',' && s[i] != '!' && s[i] != '?' && s[i] != ':' && s[i] != ';') {
 				ret = append(ret, ' ')
 				ret = append(ret, s[i])
-			}
-		} else if s[i] == 'a' || s[i] == 'A' {
+			}*/
+		/*} else*/ if s[i] == 'a' || s[i] == 'A' {
 			if i == 0 {
 				if i+1 < len(s) && (s[i+1] == ' ' || s[i+1] == '\t' || s[i+1] == '\n' || s[i+1] == '\r') {
 					jhold = i
@@ -139,40 +139,18 @@ func check_flag(s []string) int {
 	}
 }
 
-func ret_control(s string) int {
-	holder := s[1 : len(s)-1]
-	ret, Err := strconv.Atoi(holder)
-	if Err != nil {
-		return -1
-	}
-	return ret
-}
-
-func control_final_index(s []string, i int, control int) int {
-	j := 0
-	for ; j < control; i-- {
-		if s[i][0] == '(' {
-			j++
-		}
-		j++
-	}
-	return j
-}
-
 func fix_punc(s []string) []string {
 	var ret []string
-	control := 0
+	control := 1
 	for i := 0; i < len(s); i++ {
-		if i+1 < len(s) && s[i][0] == '\'' && s[i+1][0] == '\'' {
-			ret = append(ret, s[i])
-		} else if len(s[i]) == 1 && s[i][0] == '\'' {
-			if control%2 == 0 {
+		if len(s[i]) == 1 && s[i][0] == '\'' {
+			if control%2 != 0 {
 				if i+1 < len(s) {
 					s[i+1] = "'" + s[i+1]
 				} else {
 					ret = append(ret, s[i])
 				}
-			} else if control%2 != 0 {
+			} else if control%2 == 0 {
 				if i-1 > 0 {
 					ret[len(ret)-1] = ret[len(ret)-1] + "'"
 				} else {
@@ -210,6 +188,7 @@ func run_it(s []string) []string {
 			index = ret_index(s[i])
 			control = len(ret) - index
 			if index == -1 {
+				ret = append(ret, s[i])
 			}
 			flag = check_flag(strings.Split(s[i], ","))
 			if flag == 1 {
@@ -238,6 +217,36 @@ func run_it(s []string) []string {
 	}
 	return ret
 }
+func fix_mid_quote(s []string) []string {
+	var ret []string
+	for i := 0; i < len(s); i++ {
+		if len(s[i]) > 1 && s[i][0] == '\'' {
+			s[i] = s[i][1:]
+			ret = append(ret, "'")
+			ret = append(ret, s[i])
+		} else if len(s[i]) > 1 && s[i][len(s[i])-1] == '\'' {
+			s[i] = s[i][:len(s[i])-1]
+			ret = append(ret, s[i])
+			ret = append(ret, "'")
+		} else {
+			ret = append(ret, s[i])
+		}
+	}
+	return ret
+}
+
+func fix_dot(s []string) []string {
+	var ret []string
+	for i := 0; i < len(s); i++ {
+		if s[i][0] == '.' || s[i][0] == ',' || s[i][0] == '!' || s[i][0] == '?' || s[i][0] == ':' || s[i][0] == ';' {
+			ret[len(ret)-1] = ret[len(ret)-1] + s[i]
+		} else {
+			ret = append(ret, s[i])
+		}
+	}
+	return ret
+}
+
 
 func main() {
 	if len(os.Args) != 2 {
@@ -252,6 +261,8 @@ func main() {
 	content = copy_first(string(Fcontent))
 	splited_content := SplitWhiteSpaces(content)
 	splited_content = run_it(splited_content)
+	splited_content = fix_mid_quote(splited_content)
 	splited_content = fix_punc(splited_content)
+	splited_content = fix_dot(splited_content)
 	fmt.Printf("%v\n", splited_content)
 }
