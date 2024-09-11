@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	//"go-reloaded/myFunctions"
+	"go-reloaded/myFunctions"
 )
 
 func skip_extra(s string, i int) int {
@@ -123,16 +123,16 @@ func check_brack(s string) bool {
 	return s[len(s)-1] == ')'
 }
 
-func check_flag(s string) int {
-	if s == "(up" || s == "(up)" {
+func check_flag(s []string) int {
+	if s[0] == "(up" || s[0] == "(up)" {
 		return 1
-	} else if s == "(low" || s == "(low)" {
+	} else if s[0] == "(low" || s[0] == "(low)" {
 		return 2
-	} else if s == "(cap" || s == "(cap)" {
+	} else if s[0] == "(cap" || s[0] == "(cap)" {
 		return 3
-	} else if s == "(hex)" {
+	} else if s[0] == "(hex)" {
 		return 4
-	} else if s == "(bin)" {
+	} else if s[0] == "(bin)" {
 		return 5
 	} else {
 		return -1
@@ -158,61 +158,6 @@ func control_final_index(s []string, i int, control int) int {
 	}
 	return j
 }
-
-/*func run_it(s []string) []string {
-	var ret []string
-	// holder := []rune{}
-	control := 0
-	flag := 0
-	j := 0
-	for i := 0; i < len(s); i++ {
-		if s[i][0] == '(' {
-			if check_brack(s[i]) {
-				run_holder := strings.Split(s[i], ",")
-				flag = check_flag(run_holder[0])
-				if len(run_holder) > 1 {
-					control = ret_control(run_holder[1])
-				} else {
-					control = 1
-				}
-				if control > 0 {
-					control = control_final_index(s, i-1, control)
-					j = i - control
-					if j >= 0 {
-						if flag < 0 {
-							ret = append(ret, s[i])
-						} else if flag == 1 {
-							for ; j < i; j++ {
-								ret = append(ret, myFunctions.Myup(s[j]))
-							}
-						} else if flag == 2 {
-							for ; j < i; j++ {
-								if s[j][0] != '(' {
-									fmt.Println("OK")
-									ret = append(ret, myFunctions.Mylow(s[j]))
-								}
-							}
-						} else if flag == 3 {
-							for ; j < i; j++ {
-								ret = append(ret, myFunctions.Mycap(s[j]))
-							}
-						} else if flag == 4 {
-							ret = append(ret, myFunctions.Myhex(s[j]))
-						} else if flag == 5 {
-							ret = append(ret, myFunctions.Mybin(s[j]))
-						}
-					} else {
-						fmt.Println("Error.")
-						os.Exit(0)
-					}
-				} else {
-					ret = append(ret, s[i])
-				}
-			}
-		}
-	}
-	return ret
-}*/
 
 func fix_punc(s []string) []string {
 	var ret []string
@@ -243,12 +188,11 @@ func fix_punc(s []string) []string {
 }
 
 func ret_index(s string) int {
-	var holder []string
-	holder = strings.Split(s, ",")
+	holder := strings.Split(s, ",")
 	if len(holder) == 1 {
 		return 1
 	} else {
-		ret, err := strconv.Atoi(s[1:len(s)-1])
+		ret, err := strconv.Atoi(holder[1][1 : len(holder[1])-1])
 		if err != nil {
 			return -1
 		}
@@ -257,16 +201,17 @@ func ret_index(s string) int {
 }
 
 func check_index(s []string, i int, index int) int {
+	fmt.Println(s)
 	if i == 0 || index > i {
 		return -1
 	}
 	j := i - index
-	for ; j < index ; {
+	for ; j < index; j++ {
 		if len(s[i]) == 1 && s[i][0] == '\'' {
 			index++
 		}
 	}
-	return index
+	return index-1
 }
 
 func run_it(s []string) []string {
@@ -276,18 +221,42 @@ func run_it(s []string) []string {
 	for i := 0; i < len(s); i++ {
 		if s[i][0] == '(' && check_brack(s[i]) {
 			index = ret_index(s[i])
-			index = check_index(s, i-1, index)
+			index = check_index(ret, i, index)
+			fmt.Println(index)
 			if index == -1 {
-				
 			}
-		}
-		flag = check_flag(s[i])
-		for j := 0; j < len(s); j++ {
-			
+			flag = check_flag(strings.Split(s[i], ","))
+			if flag == 1 {
+				for ; index < i; index++ {
+					if ret[index][0] != '\'' {
+						ret[index] = myFunctions.Myup(ret[index])
+					}
+				}
+			} else if flag == 2 {
+				for ; index < i; index++ {
+					if ret[index][0] != '\'' {
+						ret[index] = myFunctions.Mylow(ret[index])
+					}
+				}
+			} else if flag == 3 {
+				for ; index < i; index++ {
+					if ret[index][0] != '\'' {
+						ret[index] = myFunctions.Mycap(ret[index])
+					}
+				}
+			} else if flag == 4 {
+				ret[index] = myFunctions.Myhex(ret[index])
+			} else if flag == 5 {
+				ret[index] = myFunctions.Mybin(ret[index])
+			} else {
+				ret = append(ret, s[i])
+			}
+		} else {
+			ret = append(ret, s[i])
 		}
 	}
+	return ret
 }
-
 
 func main() {
 	if len(os.Args) != 2 {
@@ -301,7 +270,7 @@ func main() {
 	}
 	content = copy_first(string(Fcontent))
 	splited_content := SplitWhiteSpaces(content)
-	//splited_content = fix_punc(splited_content)
+	// splited_content = fix_punc(splited_content)
 	splited_content = run_it(splited_content)
 	fmt.Printf("%v\n", splited_content)
 }
