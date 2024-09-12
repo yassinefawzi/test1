@@ -10,7 +10,7 @@ import (
 )
 
 func skip_extra(s []rune, i int) int {
-	for i < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
+	for i < len(s) && (s[i] == ' ' || s[i] == '\r') {
 		i++
 	}
 	i--
@@ -40,7 +40,7 @@ func SplitWhiteSpaces(s string) []string {
 			}
 			ret = append(ret, (string(holder) + ")"))
 			holder = []rune{}
-		} else if runes[i] == ' ' || runes[i] == '\t' || runes[i] == '\n' {
+		} else if runes[i] == ' ' {
 			i = skip_extra(runes, i)
 			if len(holder) >= 1 {
 				ret = append(ret, string(holder))
@@ -57,7 +57,7 @@ func SplitWhiteSpaces(s string) []string {
 }
 
 func skip_space(s []rune, i int) int {
-	for i < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
+	for i < len(s) && (s[i] == ' ' || s[i] == '\r') {
 		i++
 	}
 	return i
@@ -70,7 +70,7 @@ func copy_first(str string) string {
 	for i := 0; i < len(s); i++ {
 		if s[i] == 'a' || s[i] == 'A' {
 			if i == 0 {
-				if i+1 < len(s) && (s[i+1] == ' ' || s[i+1] == '\t' || s[i+1] == '\n' || s[i+1] == '\r') {
+				if i+1 < len(s) && (s[i+1] == ' ' || s[i+1] == '\r') {
 					jhold = i
 					i = skip_space(s, i+1)
 					if i < len(s) && (s[i] == 'a' || s[i] == 'e' || s[i] == 'i' || s[i] == 'u' || s[i] == 'o' || s[i] == 'h') {
@@ -87,8 +87,8 @@ func copy_first(str string) string {
 				} else {
 					ret = append(ret, s[i])
 				}
-			} else if i-1 > 0 && (s[i-1] == ' ' || s[i-1] == '\t' || s[i-1] == '\n' || s[i-1] == '\r') {
-				if i+1 < len(s) && (s[i+1] == ' ' || s[i+1] == '\t' || s[i+1] == '\n' || s[i+1] == '\r') {
+			} else if i-1 > 0 && (s[i-1] == ' ' || s[i-1] == '\r') {
+				if i+1 < len(s) && (s[i+1] == ' ' || s[i+1] == '\r') {
 					jhold = i
 					i = skip_space(s, i+1)
 					if i < len(s) && (s[i] == 'a' || s[i] == 'e' || s[i] == 'i' || s[i] == 'u' || s[i] == 'o' || s[i] == 'h') {
@@ -184,22 +184,26 @@ func run_it(s []string) []string {
 				ret = append(ret, s[i])
 			}
 			flag = check_flag(strings.Split(s[i], ","))
-			if flag == 1 {
-				for ; control < len(ret); control++ {
-					ret[control] = myFunctions.Myup(ret[control])
+			if control >= 0 {
+				if flag == 1 {
+					for ; control < len(ret); control++ {
+						ret[control] = myFunctions.Myup(ret[control])
+					}
+				} else if flag == 2 {
+					for ; control < len(ret); control++ {
+						ret[control] = myFunctions.Mylow(ret[control])
+					}
+				} else if flag == 3 {
+					for ; control < len(ret); control++ {
+						ret[control] = myFunctions.Mycap(ret[control])
+					}
+				} else if flag == 4 {
+					ret[control] = myFunctions.Myhex(ret[len(ret)-1])
+				} else if flag == 5 {
+					ret[control] = myFunctions.Mybin(ret[len(ret)-1])
+				} else {
+					ret = append(ret, s[i])
 				}
-			} else if flag == 2 {
-				for ; control < len(ret); control++ {
-					ret[control] = myFunctions.Mylow(ret[control])
-				}
-			} else if flag == 3 {
-				for ; control < len(ret); control++ {
-					ret[control] = myFunctions.Mycap(ret[control])
-				}
-			} else if flag == 4 {
-				ret[control] = myFunctions.Myhex(ret[len(ret)-1])
-			} else if flag == 5 {
-				ret[control] = myFunctions.Mybin(ret[len(ret)-1])
 			} else {
 				ret = append(ret, s[i])
 			}
@@ -231,9 +235,13 @@ func fix_mid_quote(s []string) []string {
 func fix_dot(s []string) []string {
 	var ret []string
 	for i := 0; i < len(s); i++ {
-		if s[i][0] == '.' || s[i][0] == ',' || s[i][0] == '!' || s[i][0] == '?' || s[i][0] == ':' || s[i][0] == ';' {
-			ret[len(ret)-1] = ret[len(ret)-1] + string(s[i][0])
-			if len(s[i]) > 1 {
+		if len(s) > 0 && (s[i][0] == '.' || s[i][0] == ',' || s[i][0] == '!' || s[i][0] == '?' || s[i][0] == ':' || s[i][0] == ';') {
+			if i-1 >= 0 {
+				ret[len(ret)-1] = ret[len(ret)-1] + string(s[i][0])
+			} else {
+				ret = append(ret, s[i])
+			}
+			if len(s[i]) > 1 && i-1 >= 0 {
 				ret = append(ret, s[i][1:])
 			}
 		} else {
@@ -278,9 +286,8 @@ func main() {
 	// Convert bytes to string
 	content := string(contentBytes)
 
-
 	// Convert string to []rune for Unicode handling
-	
+
 	// Process the content as needed
 	content = copy_first(content)
 	runes := []rune(content)
