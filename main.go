@@ -46,6 +46,12 @@ func SplitWhiteSpaces(s string) []string {
 				ret = append(ret, string(holder))
 				holder = []rune{}
 			}
+		} else if runes[i] == '\n' {
+			if len(holder) >= 1 {
+				ret = append(ret, string(holder))
+				holder = []rune{}
+			}
+			ret = append(ret, "\n")
 		} else {
 			holder = append(holder, runes[i])
 		}
@@ -163,12 +169,24 @@ func ret_index(s string) int {
 	if len(holder) == 1 {
 		return 1
 	} else {
+		if holder[1][0] != ' ' || holder[1][len(holder[1])-1] != ')' {
+			return -1
+		}
 		ret, err := strconv.Atoi(holder[1][1 : len(holder[1])-1])
 		if err != nil {
 			return -1
 		}
 		return ret
 	}
+}
+
+func check_line(s []string, control int, stop int) bool {
+	for ; control < stop ; control ++ {
+		if s[control] == "\n" {
+			return false
+		}
+	}
+	return true
 }
 
 func run_it(s []string) []string {
@@ -184,7 +202,7 @@ func run_it(s []string) []string {
 				ret = append(ret, s[i])
 			}
 			flag = check_flag(strings.Split(s[i], ","))
-			if control >= 0 {
+			if control >= 0 && check_line(s, control, len(ret)){
 				if flag == 1 {
 					for ; control < len(ret); control++ {
 						ret[control] = myFunctions.Myup(ret[control])
@@ -234,61 +252,68 @@ func fix_mid_quote(s []string) []string {
 
 func fix_dot(s []string) []string {
 	var ret []string
-	for i := 0; i < len(s); i++ {
-		if len(s) > 0 && (s[i][0] == '.' || s[i][0] == ',' || s[i][0] == '!' || s[i][0] == '?' || s[i][0] == ':' || s[i][0] == ';') {
-			if i-1 >= 0 {
-				ret[len(ret)-1] = ret[len(ret)-1] + string(s[i][0])
+	i := 0
+	for ; i < len(s); i++ {
+		word := s[i]
+		if len(word) > 0 && strings.ContainsAny(string(word[0]), ".,!?;:") { 
+			punct := ""
+			for _, char := range word {
+				if strings.ContainsAny(string(char), ".,!?;:") {
+					punct += string(char)
+				} else {
+					break
+				}
+			}
+			if len(ret) > 0 {
+				ret[len(ret)-1] += punct
 			} else {
-				ret = append(ret, s[i])
+				ret = append(ret, punct)
 			}
-			if len(s[i]) > 1 && i-1 >= 0 {
-				ret = append(ret, s[i][1:])
+			if len(word) > len(punct) {
+				ret = append(ret, word[len(punct):])
 			}
-		} else {
-			ret = append(ret, s[i])
+		} else if len(word) > 0 && strings.ContainsAny(string(word), ".,!?;:") {
+			holder := ""
+			i := 0
+			for  ; i < len(word) && !strings.ContainsAny(string(word[i]), ".,!?;:"); i++ {
+				holder += string(word[i])
+			}
+			punct := ""
+			for  ; i < len(word) && strings.ContainsAny(string(word[i]), ".,!?;:"); i++ {
+				punct += string(word[i])
+			}
+			ret = append(ret, holder + punct)
+			ret = append(ret, word[len(holder)+len(punct):])
+
+		}else {
+			ret = append(ret, word)
 		}
 	}
 	return ret
 }
 
-/*func main() {
-	if len(os.Args) != 2 {
-		fmt.Printf("Error: 3 Arguments needed\n")
-		return
+func to_one(s []string) string {
+	ret := []rune{}
+	for i := 0; i < len(s); i++ {
+		ret = append(ret, []rune(s[i])...)
+		if i+1< len(s) && s[i][0] != '\n' {
+			ret = append(ret, ' ')
+		}
 	}
-	var content string
-	Fcontent, err := os.ReadFile(os.Args[1])
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	}
-	content = copy_first(string(Fcontent))
-	splited_content := SplitWhiteSpaces(content)
-	splited_content = run_it(splited_content)
-	splited_content = fix_mid_quote(splited_content)
-	splited_content = fix_punc(splited_content)
-	splited_content = fix_dot(splited_content)
-	fmt.Printf("%v\n", splited_content)
-}*/
+	return string(ret)
+}
 
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("Error: 1 Argument needed\n")
 		return
 	}
-
-	// Read file content
 	contentBytes, err := os.ReadFile(os.Args[1])
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-
-	// Convert bytes to string
 	content := string(contentBytes)
-
-	// Convert string to []rune for Unicode handling
-
-	// Process the content as needed
 	content = copy_first(content)
 	runes := []rune(content)
 	splited_content := SplitWhiteSpaces(string(runes))
@@ -296,7 +321,6 @@ func main() {
 	splited_content = fix_mid_quote(splited_content)
 	splited_content = fix_punc(splited_content)
 	splited_content = fix_dot(splited_content)
-
-	// Output the result
-	fmt.Printf("%v\n", splited_content)
+	final := to_one(splited_content)
+	fmt.Printf("%s\n", final)
 }
