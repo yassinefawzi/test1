@@ -181,7 +181,7 @@ func ret_index(s string) int {
 }
 
 func check_line(s []string, control int, stop int) bool {
-	for ; control < stop ; control ++ {
+	for ; control < stop; control++ {
 		if s[control] == "\n" {
 			return false
 		}
@@ -202,7 +202,7 @@ func run_it(s []string) []string {
 				ret = append(ret, s[i])
 			}
 			flag = check_flag(strings.Split(s[i], ","))
-			if control >= 0 && check_line(s, control, len(ret)){
+			if control >= 0 && check_line(s, control, len(ret)) {
 				if flag == 1 {
 					for ; control < len(ret); control++ {
 						ret[control] = myFunctions.Myup(ret[control])
@@ -255,7 +255,7 @@ func fix_dot(s []string) []string {
 	i := 0
 	for ; i < len(s); i++ {
 		word := s[i]
-		if len(word) > 0 && strings.ContainsAny(string(word[0]), ".,!?;:") { 
+		if len(word) > 0 && strings.ContainsAny(string(word[0]), ".,!?;:") && word[0] != '(' {
 			punct := ""
 			for _, char := range word {
 				if strings.ContainsAny(string(char), ".,!?;:") {
@@ -272,20 +272,23 @@ func fix_dot(s []string) []string {
 			if len(word) > len(punct) {
 				ret = append(ret, word[len(punct):])
 			}
-		} else if len(word) > 0 && strings.ContainsAny(string(word), ".,!?;:") {
-			holder := ""
-			i := 0
-			for  ; i < len(word) && !strings.ContainsAny(string(word[i]), ".,!?;:"); i++ {
-				holder += string(word[i])
+		} else if len(word) > 0 && strings.ContainsAny(string(word), ".,!?;:") && word[0] != '(' {
+			k := 0
+			for j := 0; j < len(word); j++ {
+				holder := ""
+				for ; k < len(word) && !strings.ContainsAny(string(word[k]), ".,!?;:"); k++ {
+					holder += string(word[k])
+				}
+				punct := ""
+				for ; k < len(word) && strings.ContainsAny(string(word[k]), ".,!?;:"); k++ {
+					punct += string(word[k])
+				}
+				ret = append(ret, holder+punct)
+				j = k
+				punct = ""
+				holder = ""
 			}
-			punct := ""
-			for  ; i < len(word) && strings.ContainsAny(string(word[i]), ".,!?;:"); i++ {
-				punct += string(word[i])
-			}
-			ret = append(ret, holder + punct)
-			ret = append(ret, word[len(holder)+len(punct):])
-
-		}else {
+		} else {
 			ret = append(ret, word)
 		}
 	}
@@ -296,7 +299,7 @@ func to_one(s []string) string {
 	ret := []rune{}
 	for i := 0; i < len(s); i++ {
 		ret = append(ret, []rune(s[i])...)
-		if i+1< len(s) && s[i][0] != '\n' {
+		if i+1 < len(s) && s[i][0] != '\n' {
 			ret = append(ret, ' ')
 		}
 	}
@@ -304,8 +307,11 @@ func to_one(s []string) string {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Printf("Error: 1 Argument needed\n")
+	if len(os.Args) != 3  {
+		fmt.Printf("Error: Argument needed\n")
+		return
+	} else if !strings.Contains(string(os.Args[2]), ".txt") {
+		fmt.Printf("Error: last file should be a .txt\n")
 		return
 	}
 	contentBytes, err := os.ReadFile(os.Args[1])
@@ -314,6 +320,7 @@ func main() {
 		return
 	}
 	content := string(contentBytes)
+	content = strings.ReplaceAll(content, "\r\n", "\n")
 	content = copy_first(content)
 	runes := []rune(content)
 	splited_content := SplitWhiteSpaces(string(runes))
@@ -322,5 +329,9 @@ func main() {
 	splited_content = fix_punc(splited_content)
 	splited_content = fix_dot(splited_content)
 	final := to_one(splited_content)
-	fmt.Printf("%s\n", final)
+	err = os.WriteFile(os.Args[2], []byte(final), 0644)
+    if err != nil {
+        fmt.Println(err)
+		return
+    }
 }
